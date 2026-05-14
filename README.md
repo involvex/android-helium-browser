@@ -9,7 +9,7 @@ An experimental Chromium-based web browser for Android with extensions support, 
 - [Helium](https://github.com/imputnet/helium) by [imput](https://github.com/imputnet), as well as 
 - [Vanadium](https://github.com/GrapheneOS/Vanadium) by [GrapheneOS](https://github.com/GrapheneOS)
 
-<img alt="Helium Browser for Android on Android Phone" src="https://github.com/user-attachments/assets/e48b7f55-c9db-4919-b398-bd0395a92af7" />
+<img alt="Helium Browser for Android" src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" />
 
 ## Usage
 
@@ -23,6 +23,8 @@ Once you select **Add to Chrome**, [the extension will be installed in the backg
 ### Using Extensions
 
 To use [an extension's popup](https://developer.chrome.com/docs/extensions/develop/ui/add-popup), first open extensions menu, then select the menu button <kbd>⋮</kbd> next to the extension and select **Pin to toolbar**. Open the extension's popup using the extension's toolbar button.
+
+Manifest V2 (MV2) extensions are supported. You can install [uBlock Origin from Chrome Web Store](https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm).
 
 ### Debug URLs
 
@@ -86,6 +88,4 @@ To build these releases yourself via CI (e.g. GitHub Actions), fork this reposit
 
 ## Credits
 
-This project would not have been possible without the huge community contributions from [Helium](https://github.com/imputnet/helium), [Vanadium](https://github.com/GrapheneOS/Vanadium), as well as [ungoogled-chromium](https://github.com/ungoogled-software/ungoogled-chromium) and various other upstream projects. 
-
-All credit goes to the original authors and contributors. This project is named to reflect support for [Helium's](https://helium.computer) naming in a recent controversy.
+This project would not have been possible without the huge community contributions from [Helium](https://github.com/imputnet/helium), [Vanadium](https://github.com/GrapheneOS/Vanadium), as well as [ungoogled-chromium](https://github.com/ungoogled-software/ungoogled-chromium) and various other upstream projects. All credit goes to the original authors and contributors.
