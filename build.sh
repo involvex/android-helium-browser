@@ -41,6 +41,7 @@ rm -rf $SCRIPT_DIR/vanadium/patches/*trichrome-{apk-build-targets,browser-apk-ta
 replace "$SCRIPT_DIR/vanadium/patches" "VANADIUM" "HELIUM"
 replace "$SCRIPT_DIR/vanadium/patches" "Vanadium" "Helium"
 replace "$SCRIPT_DIR/vanadium/patches" "vanadium" "helium"
+replace "$SCRIPT_DIR/vanadium/patches" ".helium.app" ".vanadium.app" # components
 git am --whitespace=nowarn --keep-non-patch $SCRIPT_DIR/vanadium/patches/*.patch
 
 gclient sync -D --no-history --nohooks
@@ -74,8 +75,7 @@ sed -i '/<ViewStub/{N;N;N;N;N;N; /optional_button_stub/a\
             android:layout_height="match_parent" />
 }' chrome/browser/ui/android/toolbar/java/res/layout/toolbar_phone.xml
 sed -i 's|(ToolbarTablet) mToolbarLayout,|mToolbarLayout,|' chrome/android/java/src/org/chromium/chrome/browser/toolbar/ToolbarManager.java
-sed -i 's|android:id="@+id/extensions_menu_pin_menu_icon_button"|android:id="@+id/extensions_menu_pin_menu_icon_button" android:visibility="gone"|' chrome/browser/ui/android/extensions/java/res/layout/extensions_menu_footer.xml
-# sed -i '/private void updateMenuButtonPinState() {$/aupdateMenuIconVisibility();' chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsToolbarCoordinatorImpl.java
+sed -i '/mPrefService.setBoolean(Pref.PIN_EXTENSIONS_MENU_BUTTON, pinned);$/aif (!pinned) { mContainer.findViewById(R.id.extensions_menu_button).setVisibility(View.GONE); }' chrome/browser/ui/android/toolbar/java/src/org/chromium/chrome/browser/toolbar/extensions/ExtensionsToolbarCoordinatorImpl.java
 
 # ext: load in incognito
 sed -i 's|  if (!context->IsOffTheRecord()) {|  if (true) {|' extensions/browser/process_manager.cc

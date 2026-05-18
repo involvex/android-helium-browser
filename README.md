@@ -80,7 +80,7 @@ flowchart TD
     style n8 stroke:#FF6D00
 ```
 
-The full build aims to be consistent with [Helium](https://github.com/imputnet/helium-linux), which means additional patches are necessary before all features can be ported over. All [Vanadium](https://github.com/GrapheneOS/Vanadium) patches are applied by default. Further patches are underway.
+The full build aims to be consistent with [Helium](https://github.com/imputnet/helium-linux), which means additional patches are necessary before all features can be ported over. All [Vanadium](https://github.com/GrapheneOS/Vanadium) patches are applied by default. Further patches are underway. These are pending the resolution of licensing incompatibilities between the two browsers.
 
 ## Building
 
@@ -90,4 +90,4 @@ To build these releases yourself via CI (e.g. GitHub Actions), fork this reposit
 
 ## Credits
 
-This project would not have been possible without the huge community contributions from [Helium](https://github.com/imputnet/helium), [Vanadium](https://github.com/GrapheneOS/Vanadium), as well as [ungoogled-chromium](https://github.com/ungoogled-software/ungoogled-chromium) and various other upstream projects. All credit goes to the original authors and contributors.
+This project would not have been possible without the huge community contributions from [Helium](https://github.com/imputnet/helium), [Vanadium](https://github.com/GrapheneOS/Vanadium), as well as [ungoogled-chromium](https://github.com/ungoogled-software/ungoogled-chromium) and various other upstream projects. All credit goes to the original authors and contributors. This project is currently being developed independently of upstream.
