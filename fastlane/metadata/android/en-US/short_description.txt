@@ -1,1 +1,1 @@
-A Chromium-based web browser for Android with extensions support.
+Private and secure open-source Android browser with support for extensions
