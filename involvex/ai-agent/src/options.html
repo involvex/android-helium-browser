@@ -21,6 +21,8 @@
           <option value="gemini">Google Gemini</option>
           <option value="openai">OpenAI</option>
           <option value="anthropic">Anthropic Claude</option>
+          <option value="openrouter">OpenRouter</option>
+          <option value="custom">Custom (OpenAI-compatible)</option>
           <option value="ollama">Local (Ollama)</option>
         </select>
       </label>
@@ -31,10 +33,7 @@
           <span>API key</span>
           <input type="password" id="gemini-apiKey" placeholder="AI..." />
         </label>
-        <label class="field">
-          <span>Model</span>
-          <input type="text" id="gemini-model" placeholder="gemini-2.0-flash" />
-        </label>
+        <div class="model-row" data-model-for="gemini"></div>
         <p class="hint">Get a key at aistudio.google.com/apikey</p>
       </section>
 
@@ -44,10 +43,7 @@
           <span>API key</span>
           <input type="password" id="openai-apiKey" placeholder="sk-..." />
         </label>
-        <label class="field">
-          <span>Model</span>
-          <input type="text" id="openai-model" placeholder="gpt-4o-mini" />
-        </label>
+        <div class="model-row" data-model-for="openai"></div>
         <p class="hint">Get a key at platform.openai.com/api-keys</p>
       </section>
 
@@ -55,21 +51,52 @@
         <h2>Anthropic Claude</h2>
         <label class="field">
           <span>API key</span>
+          <input type="password" id="anthropic-apiKey" placeholder="sk-ant-..." />
+        </label>
+        <div class="model-row" data-model-for="anthropic"></div>
+        <p class="hint">Get a key at console.anthropic.com</p>
+      </section>
+
+      <section class="card" data-provider="openrouter">
+        <h2>OpenRouter</h2>
+        <label class="field">
+          <span>API key</span>
+          <input type="password" id="openrouter-apiKey" placeholder="sk-or-..." />
+        </label>
+        <label class="field">
+          <span>Base URL</span>
           <input
-            type="password"
-            id="anthropic-apiKey"
-            placeholder="sk-ant-..."
+            type="text"
+            id="openrouter-baseUrl"
+            placeholder="https://openrouter.ai/api/v1"
+          />
+        </label>
+        <div class="model-row" data-model-for="openrouter"></div>
+        <p class="hint">
+          One key, hundreds of models (incl. free ones). Get a key at
+          openrouter.ai/keys
+        </p>
+      </section>
+
+      <section class="card" data-provider="custom">
+        <h2>Custom (OpenAI-compatible)</h2>
+        <label class="field">
+          <span>Base URL</span>
+          <input
+            type="text"
+            id="custom-baseUrl"
+            placeholder="http://localhost:8080/v1"
           />
         </label>
         <label class="field">
-          <span>Model</span>
-          <input
-            type="text"
-            id="anthropic-model"
-            placeholder="claude-3-5-haiku-latest"
-          />
+          <span>API key (optional)</span>
+          <input type="password" id="custom-apiKey" placeholder="if required" />
         </label>
-        <p class="hint">Get a key at console.anthropic.com</p>
+        <div class="model-row" data-model-for="custom"></div>
+        <p class="hint">
+          For OpenCode, Kilo Code, LM Studio, vLLM, LiteLLM, or any server that
+          exposes <code>/v1/chat/completions</code>.
+        </p>
       </section>
 
       <section class="card" data-provider="ollama">
@@ -82,14 +109,11 @@
             placeholder="http://localhost:11434"
           />
         </label>
-        <label class="field">
-          <span>Model</span>
-          <input type="text" id="ollama-model" placeholder="qwen2.5:3b" />
-        </label>
+        <div class="model-row" data-model-for="ollama"></div>
         <p class="hint">
           Run a small local model, e.g. <code>ollama pull qwen2.5:3b</code>.
-          Allow the extension to reach Ollama by starting it with
-          <code>OLLAMA_ORIGINS=* ollama serve</code>.
+          Start with <code>OLLAMA_ORIGINS=* ollama serve</code> so the extension
+          can reach it.
         </p>
       </section>
 
@@ -98,6 +122,41 @@
         <button id="test">Test connection</button>
         <span id="status" class="status"></span>
       </div>
+
+      <hr class="sep" />
+
+      <h1>Backup &amp; Sync</h1>
+      <p class="sub">
+        Back up your bookmarks, extension settings and installed-extension list
+        to a <strong>private GitHub Gist</strong>. Serverless and free — no
+        Involvex or third-party server. API keys are never included in a backup.
+      </p>
+
+      <label class="field">
+        <span>GitHub token (scope: <code>gist</code>)</span>
+        <input type="password" id="backup-gistToken" placeholder="github_pat_... or ghp_..." />
+      </label>
+      <label class="field">
+        <span>Gist id (filled automatically after first backup)</span>
+        <input type="text" id="backup-gistId" placeholder="leave empty to create a new gist" />
+      </label>
+      <label class="check">
+        <input type="checkbox" id="backup-includeExtensions" />
+        <span>Include installed-extension list (asks for "management" permission)</span>
+      </label>
+
+      <div class="actions">
+        <button id="backupSave">Save backup settings</button>
+        <button id="backupNow" class="primary">Back up now</button>
+        <button id="restoreNow">Restore</button>
+        <span id="backupStatus" class="status"></span>
+      </div>
+      <p class="hint" id="lastBackup"></p>
+      <p class="hint">
+        Create a token at github.com/settings/tokens → Fine-grained or classic
+        with only the <code>gist</code> scope. Restore adds bookmarks into a new
+        "Involvex Restore" folder (it never overwrites existing bookmarks).
+      </p>
     </div>
     <script src="options.js" type="module"></script>
   </body>

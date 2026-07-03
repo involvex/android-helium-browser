@@ -1,7 +1,9 @@
 import { chat } from "./providers.js";
+import { pushBackup, fetchBackup, restoreBackup } from "./backup.js";
 
 const MAX_PAGE_CHARS = 12000;
 const MAX_AGENT_STEPS = 8;
+const PANEL_URL = "src/panel.html";
 
 // ---- Functions injected into the page (must be self-contained) ----
 
@@ -95,7 +97,14 @@ async function loadSettings() {
   return settings || { provider: "gemini" };
 }
 
-async function getActiveTab() {
+async function resolveTargetTab(tabId) {
+  if (tabId != null) {
+    try {
+      return await chrome.tabs.get(tabId);
+    } catch (_) {
+      // fall through to active tab
+    }
+  }
   const [tab] = await chrome.tabs.query({
     active: true,
     lastFocusedWindow: true,
@@ -152,9 +161,9 @@ function parseAction(raw) {
   return null;
 }
 
-async function runAsk(port, userText, history) {
+async function runAsk(port, userText, history, tabId) {
   const settings = await loadSettings();
-  const tab = await getActiveTab();
+  const tab = await resolveTargetTab(tabId);
   let page = null;
   try {
     if (tab) page = await runInPage(tab.id, pageExtract, [MAX_PAGE_CHARS]);
@@ -179,9 +188,9 @@ async function runAsk(port, userText, history) {
   port.postMessage({ event: "done" });
 }
 
-async function runAgent(port, userText, history) {
+async function runAgent(port, userText, history, tabId) {
   const settings = await loadSettings();
-  const tab = await getActiveTab();
+  const tab = await resolveTargetTab(tabId);
   if (!tab) throw new Error("No active tab to act on.");
   const toolDoc =
     `You can control the current browser page with tools. To use a tool, ` +
@@ -249,16 +258,30 @@ async function runAgent(port, userText, history) {
   port.postMessage({ event: "done" });
 }
 
-// ---- Wiring ----
+// ---- Panel opening (tab-based, works on Android where sidePanel is absent) ----
 
-function enablePanelOnActionClick() {
-  chrome.sidePanel
-    ?.setPanelBehavior({ openPanelOnActionClick: true })
-    .catch(() => {});
+async function openPanel(pageTabId) {
+  if (pageTabId != null) {
+    await chrome.storage.local.set({ targetTabId: pageTabId });
+  }
+  const panelUrl = chrome.runtime.getURL(PANEL_URL);
+  const existing = await chrome.tabs.query({ url: panelUrl });
+  if (existing.length) {
+    await chrome.tabs.update(existing[0].id, { active: true });
+    if (existing[0].windowId != null) {
+      chrome.windows.update(existing[0].windowId, { focused: true }).catch(() => {});
+    }
+    chrome.runtime.sendMessage({ event: "panel-refocus" }).catch(() => {});
+    return;
+  }
+  await chrome.tabs.create({ url: panelUrl });
 }
 
+chrome.action.onClicked.addListener(async (tab) => {
+  await openPanel(tab?.id);
+});
+
 chrome.runtime.onInstalled.addListener(() => {
-  enablePanelOnActionClick();
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
       id: "involvex-summarize-page",
@@ -283,8 +306,6 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-chrome.runtime.onStartup?.addListener(enablePanelOnActionClick);
-
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   const sel = info.selectionText || "";
   let prompt = "";
@@ -305,12 +326,43 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       return;
   }
   await chrome.storage.local.set({ pendingPrompt: prompt });
-  try {
-    await chrome.sidePanel.open({ tabId: tab.id });
-  } catch (_) {
-    // side panel open may be unavailable on some pages
-  }
+  await openPanel(tab?.id);
 });
+
+// ---- Backup message handling (one-shot requests from options page) ----
+
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (!msg || msg.type !== "backup") return false;
+  (async () => {
+    try {
+      const { settings } = await chrome.storage.local.get("settings");
+      const backupCfg = (settings && settings.backup) || {};
+      const token = backupCfg.gistToken;
+      if (msg.action === "push") {
+        if (!token) throw new Error("Set a GitHub token with 'gist' scope first.");
+        const res = await pushBackup(token, backupCfg.gistId);
+        const next = {
+          ...(settings || {}),
+          backup: { ...backupCfg, gistId: res.gistId, lastBackup: res.updatedAt },
+        };
+        await chrome.storage.local.set({ settings: next });
+        sendResponse({ ok: true, gistId: res.gistId, updatedAt: res.updatedAt });
+      } else if (msg.action === "restore") {
+        if (!token) throw new Error("Set a GitHub token with 'gist' scope first.");
+        const backup = await fetchBackup(token, backupCfg.gistId);
+        const res = await restoreBackup(backup);
+        sendResponse({ ok: true, ...res });
+      } else {
+        sendResponse({ ok: false, error: "unknown backup action" });
+      }
+    } catch (e) {
+      sendResponse({ ok: false, error: String((e && e.message) || e) });
+    }
+  })();
+  return true; // keep the message channel open for async sendResponse
+});
+
+// ---- Chat port ----
 
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== "agent") return;
@@ -318,9 +370,9 @@ chrome.runtime.onConnect.addListener((port) => {
     try {
       if (msg.type === "chat") {
         if (msg.mode === "agent") {
-          await runAgent(port, msg.text, msg.history || []);
+          await runAgent(port, msg.text, msg.history || [], msg.tabId);
         } else {
-          await runAsk(port, msg.text, msg.history || []);
+          await runAsk(port, msg.text, msg.history || [], msg.tabId);
         }
       }
     } catch (e) {

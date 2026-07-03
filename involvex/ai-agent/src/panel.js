@@ -8,16 +8,15 @@ const sendBtn = document.getElementById("send");
 const agentToggle = document.getElementById("agentToggle");
 const settingsBtn = document.getElementById("settingsBtn");
 const providerLine = document.getElementById("providerLine");
+const modelSelect = document.getElementById("modelSelect");
 
 const history = [];
 let busy = false;
 let statusEl = null;
+let targetTabId = null;
 
 function escapeHtml(s) {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 /// Renders a small, safe subset of markdown to HTML.
@@ -69,7 +68,7 @@ function scrollToBottom() {
 }
 
 function addMessage(role, text, kind) {
-  if (emptyEl) emptyEl.remove();
+  if (emptyEl && emptyEl.parentNode) emptyEl.remove();
   const el = document.createElement("div");
   el.className = `msg ${kind || role}`;
   if (role === "assistant" && kind !== "step" && kind !== "error") {
@@ -119,9 +118,10 @@ function send(text) {
       setStatus(m.text);
     } else if (m.event === "step") {
       clearStatus();
-      const args = m.args && Object.keys(m.args).length
-        ? " " + JSON.stringify(m.args)
-        : "";
+      const args =
+        m.args && Object.keys(m.args).length
+          ? " " + JSON.stringify(m.args)
+          : "";
       addMessage("assistant", `▸ ${m.action}${args}`, "step");
       if (m.thought) setStatus(m.thought);
     } else if (m.event === "assistant") {
@@ -141,7 +141,13 @@ function send(text) {
     clearStatus();
     setBusy(false);
   });
-  port.postMessage({ type: "chat", text, mode, history: history.slice(0, -1) });
+  port.postMessage({
+    type: "chat",
+    text,
+    mode,
+    tabId: targetTabId,
+    history: history.slice(0, -1),
+  });
 }
 
 formEl.addEventListener("submit", (e) => {
@@ -175,31 +181,61 @@ agentToggle.addEventListener("change", () => {
   chrome.storage.local.set({ agentMode: agentToggle.checked });
 });
 
-async function refreshProviderLine() {
+// Quick model switch from the header, persisted to the active provider config.
+modelSelect.addEventListener("change", async () => {
+  const { settings } = await chrome.storage.local.get("settings");
+  const s = settings || { provider: "gemini" };
+  const p = s.provider;
+  s[p] = { ...(s[p] || {}), model: modelSelect.value };
+  await chrome.storage.local.set({ settings: s });
+});
+
+async function refreshHeader() {
   const { settings } = await chrome.storage.local.get("settings");
   const s = settings || { provider: "gemini" };
   const info = PROVIDERS[s.provider];
   const cfg = s[s.provider] || {};
-  const model = cfg.model || info?.defaultModel || "?";
+  const currentModel = cfg.model || info?.defaultModel || "";
+
+  const models = (cfg.models && cfg.models.length
+    ? cfg.models
+    : info?.knownModels || []
+  ).slice();
+  if (currentModel && !models.includes(currentModel)) models.unshift(currentModel);
+  modelSelect.innerHTML = "";
+  if (models.length === 0) {
+    const opt = document.createElement("option");
+    opt.textContent = currentModel || "(set model in Settings)";
+    opt.value = currentModel;
+    modelSelect.appendChild(opt);
+  } else {
+    for (const m of models) {
+      const opt = document.createElement("option");
+      opt.value = m;
+      opt.textContent = m;
+      if (m === currentModel) opt.selected = true;
+      modelSelect.appendChild(opt);
+    }
+  }
+
   const missingKey = info?.needsKey && !cfg.apiKey;
   if (missingKey) {
     providerLine.textContent = `⚠ ${info.label}: no API key set — tap to open Settings`;
     providerLine.classList.add("warn");
     providerLine.onclick = () => chrome.runtime.openOptionsPage();
   } else {
-    providerLine.textContent = `${info?.label || s.provider} · ${model}`;
+    providerLine.textContent = `${info?.label || s.provider}`;
     providerLine.classList.remove("warn");
     providerLine.onclick = null;
   }
 }
 
 async function init() {
-  const { agentMode, pendingPrompt } = await chrome.storage.local.get([
-    "agentMode",
-    "pendingPrompt",
-  ]);
+  const { agentMode, pendingPrompt, targetTabId: tid } =
+    await chrome.storage.local.get(["agentMode", "pendingPrompt", "targetTabId"]);
+  targetTabId = tid ?? null;
   agentToggle.checked = !!agentMode;
-  await refreshProviderLine();
+  await refreshHeader();
   if (pendingPrompt) {
     await chrome.storage.local.remove("pendingPrompt");
     send(pendingPrompt);
@@ -207,8 +243,24 @@ async function init() {
   inputEl.focus();
 }
 
+// When the action is tapped again while the panel tab is already open, the
+// background updates targetTabId and pings us to re-read it.
+chrome.runtime.onMessage.addListener(async (msg) => {
+  if (msg && msg.event === "panel-refocus") {
+    const { pendingPrompt, targetTabId: tid } = await chrome.storage.local.get([
+      "pendingPrompt",
+      "targetTabId",
+    ]);
+    if (tid != null) targetTabId = tid;
+    if (pendingPrompt) {
+      await chrome.storage.local.remove("pendingPrompt");
+      send(pendingPrompt);
+    }
+  }
+});
+
 chrome.storage.onChanged.addListener((changes) => {
-  if (changes.settings) refreshProviderLine();
+  if (changes.settings) refreshHeader();
 });
 
 init();

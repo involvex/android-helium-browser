@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Involvex AI</title>
-    <link rel="stylesheet" href="sidepanel.css" />
+    <link rel="stylesheet" href="panel.css" />
   </head>
   <body>
     <header class="bar">
@@ -13,6 +13,7 @@
         <span>Involvex AI</span>
       </div>
       <div class="bar-actions">
+        <select id="modelSelect" class="model-select" title="Model"></select>
         <label class="toggle" title="Agent mode: let the AI click, fill and navigate">
           <input type="checkbox" id="agentToggle" />
           <span>Agent</span>
@@ -48,6 +49,6 @@
       <button id="send" type="submit" class="send" title="Send">➤</button>
     </form>
 
-    <script src="sidepanel.js" type="module"></script>
+    <script src="panel.js" type="module"></script>
   </body>
 </html>
