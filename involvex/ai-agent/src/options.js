@@ -1,4 +1,5 @@
 import { PROVIDERS, chat, listModels } from "./providers.js";
+import { loadEnv, envGistToken, envGistId } from "./env.js";
 
 const providerSel = document.getElementById("provider");
 const statusEl = document.getElementById("status");
@@ -158,11 +159,16 @@ async function load() {
   }
 
   const backup = s.backup || {};
-  el("backup-gistToken").value = backup.gistToken || "";
-  el("backup-gistId").value = backup.gistId || "";
+  const env = await loadEnv();
+  const envToken = envGistToken(env);
+  const envId = envGistId(env);
+  el("backup-gistToken").value = backup.gistToken || envToken || "";
+  el("backup-gistId").value = backup.gistId || envId || "";
   el("backup-includeExtensions").checked = !!backup.includeExtensions;
   if (backup.lastBackup) {
     lastBackupEl.textContent = `Last backup: ${new Date(backup.lastBackup).toLocaleString()}`;
+  } else if (envToken) {
+    lastBackupEl.textContent = "GitHub token loaded from .env.";
   }
   showActiveCard();
 }

@@ -1,5 +1,6 @@
 import { chat } from "./providers.js";
 import { pushBackup, fetchBackup, restoreBackup } from "./backup.js";
+import { loadEnv, envGistToken, envGistId } from "./env.js";
 
 const MAX_PAGE_CHARS = 12000;
 const MAX_AGENT_STEPS = 8;
@@ -337,10 +338,15 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     try {
       const { settings } = await chrome.storage.local.get("settings");
       const backupCfg = (settings && settings.backup) || {};
-      const token = backupCfg.gistToken;
+      const env = await loadEnv();
+      const token = backupCfg.gistToken || envGistToken(env);
+      const gistId = backupCfg.gistId || envGistId(env);
       if (msg.action === "push") {
-        if (!token) throw new Error("Set a GitHub token with 'gist' scope first.");
-        const res = await pushBackup(token, backupCfg.gistId);
+        if (!token)
+          throw new Error(
+            "No GitHub token. Add GITHUB_TOKEN=... to .env or set it in Settings.",
+          );
+        const res = await pushBackup(token, gistId);
         const next = {
           ...(settings || {}),
           backup: { ...backupCfg, gistId: res.gistId, lastBackup: res.updatedAt },
@@ -348,8 +354,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         await chrome.storage.local.set({ settings: next });
         sendResponse({ ok: true, gistId: res.gistId, updatedAt: res.updatedAt });
       } else if (msg.action === "restore") {
-        if (!token) throw new Error("Set a GitHub token with 'gist' scope first.");
-        const backup = await fetchBackup(token, backupCfg.gistId);
+        if (!token)
+          throw new Error(
+            "No GitHub token. Add GITHUB_TOKEN=... to .env or set it in Settings.",
+          );
+        const backup = await fetchBackup(token, gistId);
         const res = await restoreBackup(backup);
         sendResponse({ ok: true, ...res });
       } else {

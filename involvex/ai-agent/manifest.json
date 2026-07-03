@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Involvex AI Agent",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "On-tap AI assistant that reads and acts on the current page, plus private backup of bookmarks/settings. Multi-provider: Gemini, OpenAI, Claude, OpenRouter, custom endpoints, and local models via Ollama.",
   "permissions": [
     "activeTab",
