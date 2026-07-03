@@ -45,6 +45,11 @@ rm -rf $SCRIPT_DIR/vanadium/patches/*component-updates.patch
 replace "$SCRIPT_DIR/vanadium/patches" "VANADIUM" "HELIUM"
 replace "$SCRIPT_DIR/vanadium/patches" "Vanadium" "Helium"
 replace "$SCRIPT_DIR/vanadium/patches" "vanadium" "helium"
+replace "$SCRIPT_DIR/vanadium/patches" "io.github.jqssun.helium" "app.involvex.browser"
+# Involvex-specific patches (parent-tracked, survive submodule checkout in CI)
+if compgen -G "$SCRIPT_DIR/involvex/patches/*.patch" >/dev/null; then
+  cp $SCRIPT_DIR/involvex/patches/*.patch $SCRIPT_DIR/vanadium/patches/
+fi
 git am --whitespace=nowarn --keep-non-patch $SCRIPT_DIR/vanadium/patches/*.patch
 
 gclient sync -D --no-history --nohooks

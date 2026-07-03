@@ -1,0 +1,68 @@
+name: Build Debug (unsigned)
+
+# Produces an unsigned ChromePublic.apk on a GitHub-hosted runner.
+# No signing secrets required. APK is uploaded as a build artifact.
+# Chromium Android is large; this frees runner disk before building.
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'Runner (ubuntu-latest or self-hosted)'
+        required: true
+        type: string
+        default: 'ubuntu-latest'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ${{ inputs.runner }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Free disk space
+        run: |
+          echo "== Before =="
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android \
+            /usr/local/share/boost /usr/local/share/powershell \
+            /usr/local/lib/node_modules "${AGENT_TOOLSDIRECTORY:-}" || true
+          sudo docker image prune --all --force || true
+          sudo apt-get clean || true
+          echo "== After =="
+          df -h /
+
+      - name: Install depot_tools
+        run: |
+          git clone --depth 1 \
+            https://chromium.googlesource.com/chromium/tools/depot_tools.git \
+            "$HOME/depot_tools"
+          echo "$HOME/depot_tools" >> "$GITHUB_PATH"
+
+      - name: Build unsigned APK
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          DEPOT_TOOLS: ${{ github.workspace }}/../depot_tools
+        run: |
+          chmod +x *.sh scripts/*.sh
+          export DEPOT_TOOLS="$HOME/depot_tools"
+          bash scripts/build-debug-wsl2.sh
+
+      - name: Locate APK
+        id: apk
+        run: |
+          APK="$(find chromium/src/out/Default/apks -name 'Chrome*.apk' | head -n1)"
+          echo "path=$APK" >> "$GITHUB_OUTPUT"
+          ls -lh "$APK" || true
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: involvex-browser-debug-apk
+          path: chromium/src/out/Default/apks/Chrome*.apk
+          if-no-files-found: error
+          retention-days: 14

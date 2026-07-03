@@ -86,6 +86,17 @@ All [Vanadium](https://github.com/GrapheneOS/Vanadium) patches are applied by de
 
 ## Building
 
+### Windows (WSL2)
+
+Local builds on Windows use WSL2 — see [docs/BUILD-WSL2.md](docs/BUILD-WSL2.md).
+
+```bash
+bash scripts/setup-wsl2.sh
+bash scripts/build-debug-wsl2.sh
+```
+
+### Linux / CI
+
 All releases are built using [Actions](https://github.com/features/actions). Current releases can also be attested using [GitHub CLI](https://github.com/cli/cli).
 
 ```shell

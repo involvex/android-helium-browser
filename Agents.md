@@ -64,6 +64,17 @@ The project uses GN (Generate Ninja) for build configuration. Key files:
 
 ### Building
 
+#### Windows (WSL2)
+
+See [docs/BUILD-WSL2.md](docs/BUILD-WSL2.md) for the full WSL2 setup guide.
+
+```bash
+bash scripts/setup-wsl2.sh
+bash scripts/build-debug-wsl2.sh
+```
+
+#### Linux
+
 ```bash
 # Full build (requires secrets setup)
 ./build.sh
@@ -246,7 +257,7 @@ Helium supports Manifest V2 extensions (including uBlock Origin). Key configurat
 
 ### Branding
 
-- Package name: `io.github.jqssun.helium`
+- Package name: `app.involvex.browser` (Involvex fork; upstream: `io.github.jqssun.helium`)
 - WebView package: Configured in `args.gn`
 - String replacement via `name_substitution.py`
 

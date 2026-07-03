@@ -20,6 +20,9 @@ sed -i 's|TabUtils.isUsingDesktopUserAgent(mItemDelegate.getWebContents())|(true
 # search
 sed -i 's|BASE_FEATURE(kOmniboxSiteSearch, DISABLED);|BASE_FEATURE(kOmniboxSiteSearch, ENABLED);|' components/omnibox/common/omnibox_features.cc
 
+# privacy: prefer secure DNS (Cloudflare listed first in doh_provider_entry)
+sed -i 's|net::SecureDnsMode::kOff|net::SecureDnsMode::kSecure|' chrome/browser/net/default_dns_over_https_config_source.cc 2>/dev/null || true
+
 # playback
 sed -i 's|#if BUILDFLAG(IS_ANDROID)|#if 0|' content/public/renderer/render_frame_media_playback_options.cc
 
