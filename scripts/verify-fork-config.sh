@@ -20,8 +20,8 @@ check "Package is app.involvex.browser" \
 check "is_desktop_android enabled" \
   "grep -q 'is_desktop_android = true' '${SCRIPT_DIR}/args.gn'"
 
-check "Cloudflare DoH patch present" \
-  "test -f '${SCRIPT_DIR}/vanadium/patches/0282-default-cloudflare-doh-remove-google-dns.patch'"
+check "Cloudflare DoH privacy tweaks in patch.sh" \
+  "grep -q 'cloudflare-dns.com' '${SCRIPT_DIR}/patch.sh' && grep -q 'kDohProviderGoogle' '${SCRIPT_DIR}/patch.sh'"
 
 check "Vanadium patch count" \
   "test \$(find '${SCRIPT_DIR}/vanadium/patches' -name '*.patch' | wc -l | tr -d ' ') -ge 280"

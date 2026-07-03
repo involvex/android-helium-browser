@@ -22,13 +22,12 @@ DNS defaults.
 
 | Change | Location |
 |--------|----------|
-| Remove Google Public DNS from DoH list | `involvex/patches/0282-default-cloudflare-doh-remove-google-dns.patch` |
-| DoH probe host → `cloudflare-dns.com` | Same patch |
+| Disable Google Public DNS DoH providers | `patch.sh` sed on `doh_provider_entry.cc` |
+| DoH probe host → `cloudflare-dns.com` | `patch.sh` sed on `dns_probe_runner.cc` |
 | Prefer secure DNS mode | `patch.sh` sed on `default_dns_over_https_config_source.cc` |
 
-> Involvex patches live in `involvex/patches/` (parent-tracked) and are copied into
-> `vanadium/patches/` by `build.sh` / `scripts/build-debug-wsl2.sh` before `git am`.
-> This ensures they survive the `vanadium` submodule checkout in CI.
+> All Involvex privacy DNS tweaks are applied at build time via `patch.sh` (after Vanadium
+> `git am`), so they work with Chromium 150+ without a separate git-format patch.
 
 ### User: enable Cloudflare DoH
 
