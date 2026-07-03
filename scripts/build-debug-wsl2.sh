@@ -97,6 +97,9 @@ target_os = ["android"]
 EOF
   git submodule foreach git config -f ./.git/config submodule.\$name.ignore all
   git config --add remote.origin.fetch '+refs/tags/*:refs/tags/*'
+  # git am needs a committer identity (CI runners have none)
+  git config user.email "ci@involvex.browser"
+  git config user.name "involvex-ci"
 
   source "${SCRIPT_DIR}/common.sh"
   SCRIPT_DIR="${REPO_DIR}"  # restore: common.sh reset it relative to the changed CWD
