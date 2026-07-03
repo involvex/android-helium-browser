@@ -8,6 +8,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_DIR="${SCRIPT_DIR}"  # common.sh clobbers SCRIPT_DIR via $0; keep the real repo root
 export VERSION
 VERSION="$(grep -m1 -o '[0-9]\+\(\.[0-9]\+\)\{3\}' "${SCRIPT_DIR}/vanadium/args.gn")"
 export CHROMIUM_SOURCE=https://chromium.googlesource.com/chromium/src.git
@@ -98,6 +99,7 @@ EOF
   git config --add remote.origin.fetch '+refs/tags/*:refs/tags/*'
 
   source "${SCRIPT_DIR}/common.sh"
+  SCRIPT_DIR="${REPO_DIR}"  # restore: common.sh reset it relative to the changed CWD
   rm -rf "${SCRIPT_DIR}"/vanadium/patches/*trichrome-{apk-build-targets,browser-apk-targets}.patch
   rm -rf "${SCRIPT_DIR}"/vanadium/patches/*{detailed,supported}-language*.patch
   rm -rf "${SCRIPT_DIR}"/vanadium/patches/*component-updates.patch
