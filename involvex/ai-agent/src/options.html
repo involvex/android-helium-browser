@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Involvex AI — Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Involvex AI — Settings</h1>
+      <p class="sub">
+        Keys are stored locally on this device only (chrome.storage.local) and
+        sent directly to the provider you choose. No Involvex server is
+        involved.
+      </p>
+
+      <label class="field">
+        <span>Active provider</span>
+        <select id="provider">
+          <option value="gemini">Google Gemini</option>
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic Claude</option>
+          <option value="ollama">Local (Ollama)</option>
+        </select>
+      </label>
+
+      <section class="card" data-provider="gemini">
+        <h2>Google Gemini</h2>
+        <label class="field">
+          <span>API key</span>
+          <input type="password" id="gemini-apiKey" placeholder="AI..." />
+        </label>
+        <label class="field">
+          <span>Model</span>
+          <input type="text" id="gemini-model" placeholder="gemini-2.0-flash" />
+        </label>
+        <p class="hint">Get a key at aistudio.google.com/apikey</p>
+      </section>
+
+      <section class="card" data-provider="openai">
+        <h2>OpenAI</h2>
+        <label class="field">
+          <span>API key</span>
+          <input type="password" id="openai-apiKey" placeholder="sk-..." />
+        </label>
+        <label class="field">
+          <span>Model</span>
+          <input type="text" id="openai-model" placeholder="gpt-4o-mini" />
+        </label>
+        <p class="hint">Get a key at platform.openai.com/api-keys</p>
+      </section>
+
+      <section class="card" data-provider="anthropic">
+        <h2>Anthropic Claude</h2>
+        <label class="field">
+          <span>API key</span>
+          <input
+            type="password"
+            id="anthropic-apiKey"
+            placeholder="sk-ant-..."
+          />
+        </label>
+        <label class="field">
+          <span>Model</span>
+          <input
+            type="text"
+            id="anthropic-model"
+            placeholder="claude-3-5-haiku-latest"
+          />
+        </label>
+        <p class="hint">Get a key at console.anthropic.com</p>
+      </section>
+
+      <section class="card" data-provider="ollama">
+        <h2>Local (Ollama)</h2>
+        <label class="field">
+          <span>Base URL</span>
+          <input
+            type="text"
+            id="ollama-baseUrl"
+            placeholder="http://localhost:11434"
+          />
+        </label>
+        <label class="field">
+          <span>Model</span>
+          <input type="text" id="ollama-model" placeholder="qwen2.5:3b" />
+        </label>
+        <p class="hint">
+          Run a small local model, e.g. <code>ollama pull qwen2.5:3b</code>.
+          Allow the extension to reach Ollama by starting it with
+          <code>OLLAMA_ORIGINS=* ollama serve</code>.
+        </p>
+      </section>
+
+      <div class="actions">
+        <button id="save" class="primary">Save</button>
+        <button id="test">Test connection</button>
+        <span id="status" class="status"></span>
+      </div>
+    </div>
+    <script src="options.js" type="module"></script>
+  </body>
+</html>

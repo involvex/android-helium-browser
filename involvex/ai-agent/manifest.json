@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Involvex AI Agent",
+  "version": "0.1.0",
+  "description": "On-tap AI assistant that reads and acts on the current page. Multi-provider: Gemini, OpenAI, Claude, and local models via Ollama.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "sidePanel",
+    "contextMenus",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.openai.com/*",
+    "https://api.anthropic.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Involvex AI Agent (tap to open)"
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel.html"
+  },
+  "options_page": "src/options.html"
+}

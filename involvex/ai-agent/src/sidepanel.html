@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Involvex AI</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="bar">
+      <div class="brand">
+        <span class="dot"></span>
+        <span>Involvex AI</span>
+      </div>
+      <div class="bar-actions">
+        <label class="toggle" title="Agent mode: let the AI click, fill and navigate">
+          <input type="checkbox" id="agentToggle" />
+          <span>Agent</span>
+        </label>
+        <button id="settingsBtn" class="icon-btn" title="Settings">⚙</button>
+      </div>
+    </header>
+
+    <div id="providerLine" class="provider-line">Loading settings…</div>
+
+    <main id="messages" class="messages">
+      <div class="empty" id="empty">
+        <p class="empty-title">Ask about this page</p>
+        <p class="empty-sub">
+          I can read the page you're on, summarize it, explain selections, and
+          — in Agent mode — click, fill and navigate for you.
+        </p>
+        <div class="quick">
+          <button class="chip" data-prompt="Summarize this page in a few bullet points.">Summarize page</button>
+          <button class="chip" data-prompt="What is this page about and what can I do here?">What is this?</button>
+          <button class="chip" data-prompt="List the key links and actions on this page.">Key links</button>
+        </div>
+      </div>
+    </main>
+
+    <form id="composer" class="composer">
+      <textarea
+        id="input"
+        rows="1"
+        placeholder="Ask about this page…"
+        autocomplete="off"
+      ></textarea>
+      <button id="send" type="submit" class="send" title="Send">➤</button>
+    </form>
+
+    <script src="sidepanel.js" type="module"></script>
+  </body>
+</html>
