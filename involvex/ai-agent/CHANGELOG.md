@@ -3,6 +3,18 @@
 All notable changes to the extension. Versions follow the `manifest.json`
 `version` field.
 
+## 0.4.0
+
+- **Scheduled auto-backup** — daily or weekly Gist backup via `chrome.alarms`.
+  Configure in Settings → Backup & Sync. Last backup date shown in the panel.
+- **Streaming responses** — token-by-token rendering for Gemini and
+  OpenAI-compatible providers (OpenAI, OpenRouter, OpenCode Zen, Custom) in Ask
+  mode.
+- **Provider quick-switch** — dropdown in the panel header to change provider
+  without opening Settings.
+- Docs: `adb-update.ps1` linked from README; CI 6-hour limit documented in
+  `BUILD-WSL2.md`.
+
 ## 0.3.0
 
 - **New provider: OpenCode Zen** (`https://opencode.ai/zen/v1`), OpenAI-compatible.

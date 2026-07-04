@@ -1,8 +1,11 @@
 name: Build Debug (unsigned)
 
-# Produces an unsigned ChromePublic.apk on a GitHub-hosted runner.
-# No signing secrets required. APK is uploaded as a build artifact.
-# Chromium Android is large; this frees runner disk before building.
+# Produces an unsigned ChromePublic.apk on a GitHub-hosted or self-hosted runner.
+# IMPORTANT: GitHub-hosted ubuntu-latest has a hard 6-hour job limit. A full
+# Chromium Android compile typically needs 8–12+ hours on first build, so hosted
+# CI runs will be canceled before completion. Use workflow_dispatch with a
+# self-hosted Linux runner, or build locally via docs/BUILD-WSL2.md.
+# Recommended for daily use: install a prebuilt Helium APK and load this extension.
 
 on:
   workflow_dispatch:

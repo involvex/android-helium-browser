@@ -142,3 +142,30 @@ The target tag is defined in [`vanadium/args.gn`](../vanadium/args.gn)
 - [SYNC.md](SYNC.md) — bookmark/history sync without servers
 - [SPLIT_VIEW_EVAL.md](SPLIT_VIEW_EVAL.md) — split tab view status
 - [Agents.md](../Agents.md) — developer reference
+
+## 9. Faster path: prebuilt APK + extension (recommended)
+
+A full Chromium sync + compile consumes 150+ GB and many hours. For day-to-day
+browser + AI agent use you do not need to compile locally:
+
+1. Install a **prebuilt Helium** (or Involvex) APK that supports extensions.
+2. Load the Involvex AI Agent extension from this repo:
+   - Desktop: `chrome://extensions` → Developer mode → Load unpacked →
+     `involvex/ai-agent`
+   - Android: push to the device and load unpacked from internal storage:
+
+```powershell
+# From repo root on Windows (device connected via USB debugging)
+pwsh scripts/adb-update.ps1
+```
+
+Then on the device: `chrome://extensions` → Remove old copy → Load unpacked →
+`/sdcard/repos/ai-agent`.
+
+## 10. GitHub Actions CI
+
+The [Build Debug workflow](../.github/workflows/build-debug.yml) is
+**manual-only** (`workflow_dispatch`). GitHub-hosted runners cancel jobs after
+6 hours; our last run reached ~5h45m before cancellation. To build in CI you
+need a **self-hosted Linux runner** with 250+ GB free disk, or use the prebuilt
+APK path above.

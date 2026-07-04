@@ -10,11 +10,14 @@ const settingsBtn = document.getElementById("settingsBtn");
 const exportBtn = document.getElementById("exportBtn");
 const newBtn = document.getElementById("newBtn");
 const providerLine = document.getElementById("providerLine");
+const providerSelect = document.getElementById("providerSelect");
 const modelSelect = document.getElementById("modelSelect");
 
 const history = [];
 let busy = false;
 let statusEl = null;
+let streamEl = null;
+let streamText = "";
 let targetTabId = null;
 
 function escapeHtml(s) {
@@ -113,11 +116,26 @@ function send(text) {
   history.push({ role: "user", content: text });
   setBusy(true);
   setStatus("Connecting…");
+  streamEl = null;
+  streamText = "";
 
   const port = chrome.runtime.connect({ name: "agent" });
   port.onMessage.addListener((m) => {
     if (m.event === "status") {
       setStatus(m.text);
+    } else if (m.event === "stream_start") {
+      clearStatus();
+      if (emptyEl && emptyEl.parentNode) emptyEl.remove();
+      streamEl = document.createElement("div");
+      streamEl.className = "msg assistant streaming";
+      messagesEl.appendChild(streamEl);
+      scrollToBottom();
+    } else if (m.event === "token") {
+      streamText += m.text || "";
+      if (streamEl) {
+        streamEl.textContent = streamText;
+        scrollToBottom();
+      }
     } else if (m.event === "step") {
       clearStatus();
       const args =
@@ -128,7 +146,14 @@ function send(text) {
       if (m.thought) setStatus(m.thought);
     } else if (m.event === "assistant") {
       clearStatus();
-      addMessage("assistant", m.text);
+      if (streamEl) {
+        streamEl.classList.remove("streaming");
+        streamEl.innerHTML = renderMarkdown(m.text);
+        streamEl = null;
+        streamText = "";
+      } else {
+        addMessage("assistant", m.text);
+      }
       history.push({ role: "assistant", content: m.text });
     } else if (m.event === "error") {
       clearStatus();
@@ -240,12 +265,29 @@ modelSelect.addEventListener("change", async () => {
   await chrome.storage.local.set({ settings: s });
 });
 
+providerSelect.addEventListener("change", async () => {
+  const { settings } = await chrome.storage.local.get("settings");
+  const s = settings || { provider: "gemini" };
+  s.provider = providerSelect.value;
+  await chrome.storage.local.set({ settings: s });
+  await refreshHeader();
+});
+
 async function refreshHeader() {
   const { settings } = await chrome.storage.local.get("settings");
   const s = settings || { provider: "gemini" };
   const info = PROVIDERS[s.provider];
   const cfg = s[s.provider] || {};
   const currentModel = cfg.model || info?.defaultModel || "";
+
+  providerSelect.innerHTML = "";
+  for (const [id, p] of Object.entries(PROVIDERS)) {
+    const opt = document.createElement("option");
+    opt.value = id;
+    opt.textContent = p.label.replace(/ \(.*\)$/, "");
+    if (id === s.provider) opt.selected = true;
+    providerSelect.appendChild(opt);
+  }
 
   const models = (cfg.models && cfg.models.length
     ? cfg.models
@@ -269,12 +311,17 @@ async function refreshHeader() {
   }
 
   const missingKey = info?.needsKey && !cfg.apiKey;
+  const backup = s.backup || {};
+  let line = info?.label || s.provider;
+  if (backup.lastBackup) {
+    line += ` · backed up ${new Date(backup.lastBackup).toLocaleDateString()}`;
+  }
   if (missingKey) {
     providerLine.textContent = `⚠ ${info.label}: no API key set — tap to open Settings`;
     providerLine.classList.add("warn");
     providerLine.onclick = () => chrome.runtime.openOptionsPage();
   } else {
-    providerLine.textContent = `${info?.label || s.provider}`;
+    providerLine.textContent = line;
     providerLine.classList.remove("warn");
     providerLine.onclick = null;
   }

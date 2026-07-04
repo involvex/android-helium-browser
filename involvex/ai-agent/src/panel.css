@@ -75,7 +75,19 @@ body {
   outline: none;
 }
 
-.model-select:focus {
+.provider-select {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 12px;
+  max-width: 120px;
+  outline: none;
+}
+
+.model-select:focus,
+.provider-select:focus {
   border-color: var(--accent);
 }
 
@@ -303,7 +315,10 @@ body {
   cursor: default;
 }
 
-.blink {
+.msg.streaming {
+  white-space: pre-wrap;
+  opacity: 0.95;
+}
   animation: blink 1s steps(2, start) infinite;
 }
 

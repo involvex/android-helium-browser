@@ -166,6 +166,7 @@ async function load() {
   el("backup-gistToken").value = backup.gistToken || envToken || "";
   el("backup-gistId").value = backup.gistId || envId || "";
   el("backup-includeExtensions").checked = !!backup.includeExtensions;
+  el("backup-autoSchedule").value = backup.autoSchedule || "off";
   if (backup.lastBackup) {
     lastBackupEl.textContent = `Last backup: ${new Date(backup.lastBackup).toLocaleString()}`;
   } else if (envToken) {
@@ -218,8 +219,10 @@ async function saveBackupSettings() {
     gistToken: el("backup-gistToken").value.trim(),
     gistId: el("backup-gistId").value.trim(),
     includeExtensions: el("backup-includeExtensions").checked,
+    autoSchedule: el("backup-autoSchedule").value || "off",
   };
   await chrome.storage.local.set({ settings: s });
+  chrome.runtime.sendMessage({ type: "backup", action: "syncAlarm" });
   setBackupStatus("Backup settings saved.", "ok");
 }
 

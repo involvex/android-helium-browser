@@ -1,4 +1,4 @@
-import { chat } from "./providers.js";
+import { chat, chatStream, supportsStreaming } from "./providers.js";
 import { pushBackup, fetchBackup, restoreBackup } from "./backup.js";
 import { loadEnv, envGistToken, envGistId } from "./env.js";
 
@@ -184,7 +184,15 @@ async function runAsk(port, userText, history, tabId) {
     { role: "user", content: userText },
   ];
   port.postMessage({ event: "status", text: "Thinking…" });
-  const answer = await chat(settings, messages);
+  let answer;
+  if (supportsStreaming(settings.provider)) {
+    port.postMessage({ event: "stream_start" });
+    answer = await chatStream(settings, messages, (chunk) => {
+      port.postMessage({ event: "token", text: chunk });
+    });
+  } else {
+    answer = await chat(settings, messages);
+  }
   port.postMessage({ event: "assistant", text: answer });
   port.postMessage({ event: "done" });
 }
@@ -282,7 +290,7 @@ chrome.action.onClicked.addListener(async (tab) => {
   await openPanel(tab?.id);
 });
 
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(async () => {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
       id: "involvex-summarize-page",
@@ -305,6 +313,8 @@ chrome.runtime.onInstalled.addListener(() => {
       contexts: ["selection"],
     });
   });
+  const { settings } = await chrome.storage.local.get("settings");
+  await syncBackupAlarm(settings || {});
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -328,6 +338,45 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
   await chrome.storage.local.set({ pendingPrompt: prompt });
   await openPanel(tab?.id);
+});
+
+// ---- Scheduled backup (chrome.alarms) ----
+
+const BACKUP_ALARM = "involvex-auto-backup";
+
+async function runAutoBackup() {
+  const { settings } = await chrome.storage.local.get("settings");
+  const backupCfg = (settings && settings.backup) || {};
+  const env = await loadEnv();
+  const token = backupCfg.gistToken || envGistToken(env);
+  const gistId = backupCfg.gistId || envGistId(env);
+  if (!token) return { ok: false, error: "no token" };
+  const res = await pushBackup(token, gistId);
+  const next = {
+    ...(settings || {}),
+    backup: { ...backupCfg, gistId: res.gistId, lastBackup: res.updatedAt },
+  };
+  await chrome.storage.local.set({ settings: next });
+  return { ok: true, gistId: res.gistId, updatedAt: res.updatedAt };
+}
+
+async function syncBackupAlarm(settings) {
+  await chrome.alarms.clear(BACKUP_ALARM);
+  const schedule = settings?.backup?.autoSchedule || "off";
+  if (schedule === "daily") {
+    await chrome.alarms.create(BACKUP_ALARM, { periodInMinutes: 24 * 60 });
+  } else if (schedule === "weekly") {
+    await chrome.alarms.create(BACKUP_ALARM, { periodInMinutes: 7 * 24 * 60 });
+  }
+}
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name !== BACKUP_ALARM) return;
+  try {
+    await runAutoBackup();
+  } catch (e) {
+    console.warn("Involvex auto-backup failed:", e);
+  }
 });
 
 // ---- Backup message handling (one-shot requests from options page) ----
@@ -361,6 +410,9 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         const backup = await fetchBackup(token, gistId);
         const res = await restoreBackup(backup);
         sendResponse({ ok: true, ...res });
+      } else if (msg.action === "syncAlarm") {
+        await syncBackupAlarm(settings || {});
+        sendResponse({ ok: true });
       } else {
         sendResponse({ ok: false, error: "unknown backup action" });
       }

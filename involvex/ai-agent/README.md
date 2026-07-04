@@ -34,13 +34,22 @@ desktop Chrome/Edge without rebuilding the browser.
 2. Enable **Developer mode**.
 3. Click **Load unpacked** and select this `involvex/ai-agent` folder.
 4. Open **Details → Extension options** and set your provider + API key.
-5. Tap the toolbar icon to open the side panel.
+5. Tap the toolbar icon to open the AI chat panel.
 
 ### Involvex Browser on Android
 
-Extension loading is enabled in this fork. Open the browser's extensions page,
-choose **Load unpacked** / install from a local `.zip` of this folder, then open
-the extension's options to configure a provider.
+Extension loading is enabled in this fork. Push the extension to your device
+and load it unpacked:
+
+```powershell
+# From repo root (USB debugging enabled)
+pwsh scripts/adb-update.ps1
+```
+
+On the device: `chrome://extensions` → **Remove** any old copy → **Load unpacked**
+→ `/sdcard/repos/ai-agent`. Confirm version **0.4.0** in the extension list.
+Open **Extension options** to set your provider (e.g. OpenCode Zen +
+`mimo-v2.5-free`).
 
 ## Configure a provider
 

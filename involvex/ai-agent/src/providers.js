@@ -313,3 +313,189 @@ async function chatOllama(base, model, messages, signal) {
   const data = await request(`${base}/api/chat`, { body, signal });
   return (data?.message?.content || "").trim();
 }
+
+const STREAMING_PROVIDERS = new Set([
+  "gemini",
+  "openai",
+  "openrouter",
+  "opencode",
+  "custom",
+]);
+
+export function supportsStreaming(provider) {
+  return STREAMING_PROVIDERS.has(provider);
+}
+
+/// Parses an SSE byte stream and invokes `onToken` for each text delta.
+async function readOpenAiSse(res, onToken, signal) {
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split("\n");
+    buffer = parts.pop() || "";
+    for (const line of parts) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const data = trimmed.slice(5).trim();
+      if (data === "[DONE]") return;
+      try {
+        const json = JSON.parse(data);
+        const delta = json.choices?.[0]?.delta?.content;
+        if (delta) onToken(delta);
+      } catch (_) {
+        // skip malformed SSE chunks
+      }
+    }
+  }
+}
+
+async function readGeminiSse(res, onToken, signal) {
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split("\n");
+    buffer = parts.pop() || "";
+    for (const line of parts) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const data = trimmed.slice(5).trim();
+      try {
+        const json = JSON.parse(data);
+        const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) onToken(text);
+      } catch (_) {
+        // skip malformed SSE chunks
+      }
+    }
+  }
+}
+
+async function streamOpenAiCompatible(
+  url,
+  apiKey,
+  model,
+  messages,
+  signal,
+  onToken,
+  extraHeaders = {},
+) {
+  const headers = {
+    "Content-Type": "application/json",
+    ...extraHeaders,
+  };
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ model, messages, temperature: 0.3, stream: true }),
+    signal,
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${res.statusText} ${detail}`.trim());
+  }
+  await readOpenAiSse(res, onToken, signal);
+}
+
+async function streamGemini(apiKey, model, messages, signal, onToken) {
+  if (!apiKey) throw new Error("Gemini API key not set (open Options).");
+  const { system, rest } = splitSystem(messages);
+  const contents = rest.map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
+  const body = { contents };
+  if (system) body.systemInstruction = { parts: [{ text: system }] };
+  const url =
+    `https://generativelanguage.googleapis.com/v1beta/models/` +
+    `${encodeURIComponent(model)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${res.statusText} ${detail}`.trim());
+  }
+  await readGeminiSse(res, onToken, signal);
+}
+
+/// Like `chat`, but calls `onToken(chunk)` as text arrives. Returns the full reply.
+export async function chatStream(settings, messages, onToken) {
+  const provider = settings.provider;
+  const cfg = settings[provider] || {};
+  const model = cfg.model || PROVIDERS[provider].defaultModel;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+  let full = "";
+  const emit = (chunk) => {
+    full += chunk;
+    onToken(chunk);
+  };
+  try {
+    switch (provider) {
+      case "gemini":
+        await streamGemini(cfg.apiKey, model, messages, controller.signal, emit);
+        break;
+      case "openai":
+        await streamOpenAiCompatible(
+          "https://api.openai.com/v1/chat/completions",
+          cfg.apiKey,
+          model,
+          messages,
+          controller.signal,
+          emit,
+        );
+        break;
+      case "openrouter":
+        await streamOpenAiCompatible(
+          `${baseUrlFor("openrouter", cfg)}/chat/completions`,
+          cfg.apiKey,
+          model,
+          messages,
+          controller.signal,
+          emit,
+          { "HTTP-Referer": "https://involvex.browser", "X-Title": "Involvex AI" },
+        );
+        break;
+      case "opencode":
+        await streamOpenAiCompatible(
+          `${baseUrlFor("opencode", cfg)}/chat/completions`,
+          cfg.apiKey,
+          model,
+          messages,
+          controller.signal,
+          emit,
+        );
+        break;
+      case "custom":
+        await streamOpenAiCompatible(
+          `${baseUrlFor("custom", cfg)}/chat/completions`,
+          cfg.apiKey,
+          model,
+          messages,
+          controller.signal,
+          emit,
+        );
+        break;
+      default:
+        full = await chat(settings, messages);
+        if (full) onToken(full);
+    }
+    return full.trim();
+  } finally {
+    clearTimeout(timer);
+  }
+}

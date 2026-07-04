@@ -16,18 +16,20 @@ Status legend: ✅ done · 🚧 in progress · ⏭ next · 💡 idea
 - Custom icon set
 - Export session as Markdown
 
-## Next ⏭
+## Next
 
-1. **Scheduled auto-backup** — `chrome.alarms` timer calling the Gist push on an
-   interval, with a "last synced" indicator.
-2. **Streaming responses** — token-by-token rendering for OpenAI-compatible and
-   Gemini endpoints (SSE) instead of waiting for the full reply.
-3. **Per-provider quick switch in the panel** — a small dropdown next to the
-   model select to change provider without opening Settings.
-4. **Restore-with-merge for extensions** — offer install links from the
+1. **Restore-with-merge for extensions** — offer install links from the
    backed-up extension list (open each `homepageUrl`/webstore entry).
+2. **Conversation history persistence** — list of past sessions with search.
+3. **Prompt library** — editable quick-prompt chips in Settings.
 
-## Ideas 💡
+## Done (v0.4.0)
+
+- Scheduled auto-backup (`chrome.alarms`) with last-synced indicator
+- Streaming SSE responses (Gemini + OpenAI-compatible)
+- Per-provider quick switch in panel header
+
+## Ideas
 
 - Conversation history persistence (list of past sessions) with search.
 - Prompt library / custom quick-prompt chips editable in Settings.
