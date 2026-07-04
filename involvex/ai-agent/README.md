@@ -15,14 +15,16 @@ desktop Chrome/Edge without rebuilding the browser.
 - **Agent mode** (toggle): the model can `read_page`, `click`, `fill`,
   `navigate`, and `scroll` to complete multi-step tasks. Capped at 8 steps.
 - **Multi-provider**: Google Gemini, OpenAI, Anthropic Claude, **OpenRouter**
-  (hundreds of models, incl. free), a **Custom OpenAI-compatible endpoint**
-  (OpenCode, Kilo Code, LM Studio, vLLM, LiteLLM…), or a **local model via
-  Ollama**. Keys are stored locally and sent straight to the provider — no
-  Involvex server.
+  (hundreds of models, incl. free), **OpenCode Zen** (default `mimo-v2.5-free`),
+  a **Custom OpenAI-compatible endpoint** (Kilo Code, LM Studio, vLLM, LiteLLM…),
+  or a **local model via Ollama**. Keys are stored locally and sent straight to
+  the provider — no Involvex server.
 - **Model dropdown**: pick the model in Settings (with a **Load models** button
   that fetches the provider's live list) or switch quickly from the panel header.
 - **Backup & Sync**: back up bookmarks + settings + installed-extension list to
   a **private GitHub Gist**. Serverless, free, and API keys are never included.
+- **Export session as Markdown**: the ⤓ button saves the whole conversation
+  (with the provider/model/mode header) to a `.md` file.
 
 ## Install (developer load)
 
@@ -50,6 +52,7 @@ Open the options page and pick one:
 | OpenAI     | yes       | platform.openai.com/api-keys  | `gpt-4o-mini`              |
 | Anthropic  | yes       | console.anthropic.com         | `claude-3-5-haiku-latest`  |
 | OpenRouter | yes       | openrouter.ai/keys            | `openrouter/auto`          |
+| OpenCode Zen | yes     | opencode.ai                   | `mimo-v2.5-free`           |
 | Custom     | optional  | your own server               | server-defined             |
 | Ollama     | no        | local install                 | `qwen2.5:3b`               |
 
@@ -104,9 +107,26 @@ on the LAN) since the phone itself won't run the server.
 - `src/providers.js` — unified `chat()` and `listModels()` across
   Gemini/OpenAI/Anthropic/OpenRouter/custom/Ollama.
 - `src/backup.js` — private-Gist backup/restore of bookmarks + settings.
-- `src/panel.*` — the chat UI (on-tap surface, model dropdown, quick prompts,
-  Agent toggle). Opens as a tab so it works on Android.
+- `src/env.js` — optional `.env` loader for the Gist token.
+- `src/panel.*` — the chat UI (on-tap surface, model dropdown, export, quick
+  prompts, Agent toggle). Opens as a tab so it works on Android.
 - `src/options.*` — provider settings, model picker, connection test, backup.
+- `icons/` — extension icon set (16/32/48/128).
+- `scripts/package-extension.*` — build a store-ready zip.
+
+## Packaging
+
+```bash
+# from involvex/ai-agent
+bash scripts/package-extension.sh          # -> dist/involvex-ai-agent-<version>.zip
+```
+
+```powershell
+# Windows
+pwsh scripts/package-extension.ps1
+```
+
+See `CHANGELOG.md` for release notes and `ROADMAP.md` for what's next.
 
 The agent loop is provider-agnostic: the model requests one tool per turn as a
 JSON block, the worker executes it in the page and feeds back the result until

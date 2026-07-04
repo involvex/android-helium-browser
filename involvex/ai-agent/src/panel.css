@@ -48,12 +48,11 @@ body {
   flex: none;
 }
 
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  box-shadow: 0 0 10px var(--accent);
+.logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: block;
 }
 
 .bar-actions {

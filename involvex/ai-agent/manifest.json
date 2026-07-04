@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Involvex AI Agent",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "On-tap AI assistant that reads and acts on the current page, plus private backup of bookmarks/settings. Multi-provider: Gemini, OpenAI, Claude, OpenRouter, custom endpoints, and local models via Ollama.",
   "permissions": [
     "activeTab",
@@ -17,6 +17,7 @@
     "https://api.openai.com/*",
     "https://api.anthropic.com/*",
     "https://openrouter.ai/*",
+    "https://opencode.ai/*",
     "https://api.github.com/*",
     "http://localhost/*",
     "http://127.0.0.1/*",
@@ -26,8 +27,20 @@
     "service_worker": "src/background.js",
     "type": "module"
   },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "action": {
-    "default_title": "Involvex AI Agent (tap to open)"
+    "default_title": "Involvex AI Agent (tap to open)",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "options_page": "src/options.html"
 }

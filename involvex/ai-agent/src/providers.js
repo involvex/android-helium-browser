@@ -40,6 +40,29 @@ export const PROVIDERS = {
       "qwen/qwen-2.5-72b-instruct",
     ],
   },
+  opencode: {
+    label: "OpenCode Zen",
+    defaultModel: "mimo-v2.5-free",
+    needsKey: true,
+    defaultBaseUrl: "https://opencode.ai/zen/v1",
+    knownModels: [
+      "mimo-v2.5-free",
+      "deepseek-v4-flash-free",
+      "nemotron-3-ultra-free",
+      "north-mini-code-free",
+      "big-pickle",
+      "claude-haiku-4-5",
+      "claude-sonnet-5",
+      "gemini-3-flash",
+      "gpt-5-nano",
+      "gpt-5.1-codex-mini",
+      "deepseek-v4-flash",
+      "glm-5",
+      "kimi-k2.5",
+      "qwen3.5-plus",
+    ],
+    hint: "OpenAI-compatible. Free models end with -free (e.g. mimo-v2.5-free).",
+  },
   custom: {
     label: "Custom (OpenAI-compatible)",
     defaultModel: "",
@@ -110,6 +133,14 @@ export async function chat(settings, messages) {
           controller.signal,
           { "HTTP-Referer": "https://involvex.browser", "X-Title": "Involvex AI" },
         );
+      case "opencode":
+        return await chatOpenAiCompatible(
+          `${baseUrlFor("opencode", cfg)}/chat/completions`,
+          cfg.apiKey,
+          model,
+          messages,
+          controller.signal,
+        );
       case "custom":
         return await chatOpenAiCompatible(
           `${baseUrlFor("custom", cfg)}/chat/completions`,
@@ -175,6 +206,17 @@ export async function listModels(settings) {
           { method: "GET", signal: controller.signal },
         );
         return (data.data || []).map((m) => m.id).sort();
+      }
+      case "opencode": {
+        const headers = cfg.apiKey
+          ? { Authorization: `Bearer ${cfg.apiKey}` }
+          : {};
+        const data = await request(`${baseUrlFor("opencode", cfg)}/models`, {
+          method: "GET",
+          headers,
+          signal: controller.signal,
+        });
+        return (data.data || []).map((m) => m.id);
       }
       case "custom": {
         const headers = cfg.apiKey

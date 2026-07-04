@@ -7,6 +7,8 @@ const formEl = document.getElementById("composer");
 const sendBtn = document.getElementById("send");
 const agentToggle = document.getElementById("agentToggle");
 const settingsBtn = document.getElementById("settingsBtn");
+const exportBtn = document.getElementById("exportBtn");
+const newBtn = document.getElementById("newBtn");
 const providerLine = document.getElementById("providerLine");
 const modelSelect = document.getElementById("modelSelect");
 
@@ -176,6 +178,54 @@ document.addEventListener("click", (e) => {
 });
 
 settingsBtn.addEventListener("click", () => chrome.runtime.openOptionsPage());
+
+/// Serializes the current session to Markdown and triggers a download.
+function exportMarkdown() {
+  if (!history.length) {
+    addMessage("assistant", "Nothing to export yet — start a chat first.", "error");
+    return;
+  }
+  const now = new Date();
+  const lines = [
+    `# Involvex AI — session`,
+    "",
+    `- Date: ${now.toLocaleString()}`,
+    `- Provider/model: ${providerLine.textContent} · ${modelSelect.value}`,
+    `- Mode: ${agentToggle.checked ? "Agent" : "Ask"}`,
+    "",
+    "---",
+    "",
+  ];
+  for (const m of history) {
+    const who = m.role === "user" ? "You" : "Assistant";
+    lines.push(`## ${who}`, "", m.content, "");
+  }
+  const blob = new Blob([lines.join("\n")], {
+    type: "text/markdown;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `involvex-ai-${now.toISOString().slice(0, 19).replace(/[:T]/g, "-")}.md`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function newChat() {
+  history.length = 0;
+  messagesEl.innerHTML = "";
+  const div = document.createElement("div");
+  div.className = "empty";
+  div.innerHTML =
+    '<p class="empty-title">New chat</p>' +
+    '<p class="empty-sub">Ask about this page, or turn on Agent mode to let me act on it.</p>';
+  messagesEl.appendChild(div);
+}
+
+exportBtn.addEventListener("click", exportMarkdown);
+newBtn.addEventListener("click", newChat);
 
 agentToggle.addEventListener("change", () => {
   chrome.storage.local.set({ agentMode: agentToggle.checked });

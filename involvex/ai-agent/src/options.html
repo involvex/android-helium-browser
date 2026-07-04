@@ -22,6 +22,7 @@
           <option value="openai">OpenAI</option>
           <option value="anthropic">Anthropic Claude</option>
           <option value="openrouter">OpenRouter</option>
+          <option value="opencode">OpenCode Zen</option>
           <option value="custom">Custom (OpenAI-compatible)</option>
           <option value="ollama">Local (Ollama)</option>
         </select>
@@ -75,6 +76,28 @@
         <p class="hint">
           One key, hundreds of models (incl. free ones). Get a key at
           openrouter.ai/keys
+        </p>
+      </section>
+
+      <section class="card" data-provider="opencode">
+        <h2>OpenCode Zen</h2>
+        <label class="field">
+          <span>API key</span>
+          <input type="password" id="opencode-apiKey" placeholder="opencode key" />
+        </label>
+        <label class="field">
+          <span>Base URL</span>
+          <input
+            type="text"
+            id="opencode-baseUrl"
+            placeholder="https://opencode.ai/zen/v1"
+          />
+        </label>
+        <div class="model-row" data-model-for="opencode"></div>
+        <p class="hint">
+          OpenAI-compatible. Free models end with <code>-free</code>, e.g.
+          <code>mimo-v2.5-free</code>. Use <strong>Load models</strong> for the
+          full live list.
         </p>
       </section>
 

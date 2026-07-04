@@ -11,6 +11,7 @@ const KEY_FIELDS = {
   openai: ["apiKey"],
   anthropic: ["apiKey"],
   openrouter: ["apiKey", "baseUrl"],
+  opencode: ["apiKey", "baseUrl"],
   custom: ["baseUrl", "apiKey"],
   ollama: ["baseUrl"],
 };

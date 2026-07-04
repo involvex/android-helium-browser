@@ -1,2 +1,5 @@
 # Local secrets — read at runtime, pushed to the device via adb, never committed.
 .env
+
+# Packaging output
+dist/
