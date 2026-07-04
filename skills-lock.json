@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "buildbucket": {
+      "source": "chromium/tools/depot_tools",
+      "sourceType": "git",
+      "skillPath": "agents/skills/buildbucket/SKILL.md",
+      "computedHash": "30e5d8c1bdc6816e869a0c7229692ed31d8871560fb8956be964ad22490ff07c"
+    },
+    "luci-test-results": {
+      "source": "chromium/tools/depot_tools",
+      "sourceType": "git",
+      "skillPath": "agents/skills/luci-test-results/SKILL.md",
+      "computedHash": "a6aa20f07e36ba75d40423c7423e68c8a072826c14aeb9ab5a2848b9eb73bdb9"
+    },
+    "skill-validator": {
+      "source": "chromium/tools/depot_tools",
+      "sourceType": "git",
+      "skillPath": "agents/skills/skill-validator/SKILL.md",
+      "computedHash": "0637787e0e2ff2cdae5bb7a2a61d097ccef8c72a1894567c43a78a8064dadbe5"
+    }
+  }
+}

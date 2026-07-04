@@ -6,3 +6,11 @@ keys/
 
 *.aab
 *.apk
+*.env
+
+# Local IDE / agent state
+.cursor/
+
+# Python
+__pycache__/
+*.pyc
